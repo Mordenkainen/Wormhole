@@ -40,23 +40,34 @@ public class TileEntityRendererPlayerLink extends TileEntitySpecialRenderer {
     		GL11.glTranslated(x, y, z);
     		Tessellator tessellator = Tessellator.instance;
     		tessellator.startDrawingQuads();
-    		tessellator.setBrightness(BlockEnum.PLAYERLINK.getBlockInstance().getMixedBrightnessForBlock(tileentity.getWorldObj(), tileentity.xCoord, tileentity.yCoord, tileentity.zCoord + 1));
-    		tessellator.addVertexWithUV(0.25, 0.25, -0.001, 16 * pixelx, 16 * pixely);
-    		tessellator.addVertexWithUV(0.25, 0.75, -0.001, 16 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(0.75, 0.75, -0.001, 8 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(0.75, 0.25, -0.001, 8 * pixelx, 16 * pixely);
-    		tessellator.addVertexWithUV(1.001, 0.25, 0.25, 16 * pixelx, 16 * pixely);
-    		tessellator.addVertexWithUV(1.001, 0.75, 0.25, 16 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(1.001, 0.75, 0.75, 8 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(1.001, 0.25, 0.75, 8 * pixelx, 16 * pixely);
-    		tessellator.addVertexWithUV(0.75, 0.25, 1.001, 16 * pixelx, 16 * pixely);
-    		tessellator.addVertexWithUV(0.75, 0.75, 1.001, 16 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(0.25, 0.75, 1.001, 8 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(0.25, 0.25, 1.001, 8 * pixelx, 16 * pixely);
-    		tessellator.addVertexWithUV(-0.001, 0.25, 0.75, 16 * pixelx, 16 * pixely);
-    		tessellator.addVertexWithUV(-0.001, 0.75, 0.75, 16 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(-0.001, 0.75, 0.25, 8 * pixelx, 8 * pixely);
-    		tessellator.addVertexWithUV(-0.001, 0.25, 0.25, 8 * pixelx, 16 * pixely);
+    		if (BlockEnum.PLAYERLINK.getBlockInstance().shouldSideBeRendered(tileentity.getWorldObj(), tileentity.xCoord, tileentity.yCoord, tileentity.zCoord - 1, 2)) {
+    			tessellator.setBrightness(BlockEnum.PLAYERLINK.getBlockInstance().getMixedBrightnessForBlock(tileentity.getWorldObj(), tileentity.xCoord, tileentity.yCoord, tileentity.zCoord - 1));
+	    		tessellator.addVertexWithUV(0.25, 0.25, -0.001, 16 * pixelx, 16 * pixely);
+	    		tessellator.addVertexWithUV(0.25, 0.75, -0.001, 16 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(0.75, 0.75, -0.001, 8 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(0.75, 0.25, -0.001, 8 * pixelx, 16 * pixely);
+    		}
+    		if (BlockEnum.PLAYERLINK.getBlockInstance().shouldSideBeRendered(tileentity.getWorldObj(), tileentity.xCoord + 1, tileentity.yCoord, tileentity.zCoord, 5)) {
+    			tessellator.setBrightness(BlockEnum.PLAYERLINK.getBlockInstance().getMixedBrightnessForBlock(tileentity.getWorldObj(), tileentity.xCoord + 1, tileentity.yCoord, tileentity.zCoord));
+	    	    tessellator.addVertexWithUV(1.001, 0.25, 0.25, 16 * pixelx, 16 * pixely);
+	    		tessellator.addVertexWithUV(1.001, 0.75, 0.25, 16 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(1.001, 0.75, 0.75, 8 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(1.001, 0.25, 0.75, 8 * pixelx, 16 * pixely);
+    		}
+    		if (BlockEnum.PLAYERLINK.getBlockInstance().shouldSideBeRendered(tileentity.getWorldObj(), tileentity.xCoord, tileentity.yCoord, tileentity.zCoord + 1, 3)) {
+    			tessellator.setBrightness(BlockEnum.PLAYERLINK.getBlockInstance().getMixedBrightnessForBlock(tileentity.getWorldObj(), tileentity.xCoord, tileentity.yCoord, tileentity.zCoord + 1));
+	    		tessellator.addVertexWithUV(0.75, 0.25, 1.001, 16 * pixelx, 16 * pixely);
+	    		tessellator.addVertexWithUV(0.75, 0.75, 1.001, 16 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(0.25, 0.75, 1.001, 8 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(0.25, 0.25, 1.001, 8 * pixelx, 16 * pixely);
+    		}
+    		if (BlockEnum.PLAYERLINK.getBlockInstance().shouldSideBeRendered(tileentity.getWorldObj(), tileentity.xCoord - 1, tileentity.yCoord, tileentity.zCoord, 4)) {
+    			tessellator.setBrightness(BlockEnum.PLAYERLINK.getBlockInstance().getMixedBrightnessForBlock(tileentity.getWorldObj(), tileentity.xCoord - 1, tileentity.yCoord, tileentity.zCoord));
+    	    	tessellator.addVertexWithUV(-0.001, 0.25, 0.75, 16 * pixelx, 16 * pixely);
+	    		tessellator.addVertexWithUV(-0.001, 0.75, 0.75, 16 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(-0.001, 0.75, 0.25, 8 * pixelx, 8 * pixely);
+	    		tessellator.addVertexWithUV(-0.001, 0.25, 0.25, 8 * pixelx, 16 * pixely);
+    		}
     		tessellator.draw();
     		GL11.glPopMatrix();
 		}
