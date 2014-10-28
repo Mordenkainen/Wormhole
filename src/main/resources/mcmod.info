@@ -1,0 +1,16 @@
+[
+{
+  "modid": "wormhole",
+  "name": "Wormhole",
+  "description": "Ender teleportation based pipes.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Mordenkainen"],
+  "credits": "",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

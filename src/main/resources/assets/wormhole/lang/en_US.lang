@@ -1,0 +1,20 @@
+//********//
+//WORMHOLE//
+//********//
+
+//Creative Tab
+itemGroup.wormhole=Wormhole
+tile.wormhole.quantumore.overworld.name=Quantum Ore
+tile.wormhole.quantumore.nether.name=Quantum Ore
+tile.wormhole.quantumore.end.name=Quantum Ore
+tile.wormhole.quantumorelit.overworld.name=Quantum Ore
+tile.wormhole.quantumorelit.nether.name=Quantum Ore
+tile.wormhole.quantumorelit.end.name=Quantum Ore
+tile.wormhole.wormhole.name=Wormhole
+tile.wormhole.playerlink.name=Playerlink
+item.wormhole.wormholeanchor.name=Wormhole Anchor
+item.wormhole.quantumcrystal.stable.name=Stabilized Quantum Crystal
+item.wormhole.quantumcrystal.unstable.name=Unstable Quantum Crystal
+item.wormhole.camotool.name=Camouflage Tool
+
+

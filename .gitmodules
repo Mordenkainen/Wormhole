@@ -1,0 +1,3 @@
+[submodule "src/main/cofh"]
+	path = src/main/cofh
+	url = https://github.com/CoFH/RedstoneFlux-API.git
