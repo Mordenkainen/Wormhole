@@ -1,5 +1,4 @@
 // TODO test OPs breaking this block
-// TODO custom damage source?
 package com.mordenkainen.wormhole.blocks;
 
 // Java
@@ -50,7 +49,7 @@ public class BlockPlayerLink extends BlockCamo {
 		if (te != null) {
 			if (te.owner == null) {
 				if (!player.capabilities.isCreativeMode) {
-					player.attackEntityFrom(DamageSource.fall, 5.0F);
+					player.attackEntityFrom(DamageSource.magic, 5.0F);
 				}
 				if (!world.isRemote) {
 					te.setOwner(new GameProfile((UUID)null, player.getCommandSenderName()));

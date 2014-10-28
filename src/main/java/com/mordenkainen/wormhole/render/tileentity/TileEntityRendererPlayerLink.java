@@ -1,4 +1,3 @@
-// TODO don't render non-visible sides?
 package com.mordenkainen.wormhole.render.tileentity;
 
 // Java

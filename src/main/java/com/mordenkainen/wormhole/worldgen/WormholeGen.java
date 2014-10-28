@@ -1,4 +1,3 @@
-// TODO gen random # of ores in each vein?
 package com.mordenkainen.wormhole.worldgen;
 
 // Java

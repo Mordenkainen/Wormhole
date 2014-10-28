@@ -1,4 +1,3 @@
-// TODO Crafting recipes
 package com.mordenkainen.wormhole;
 
 // Minecraft
