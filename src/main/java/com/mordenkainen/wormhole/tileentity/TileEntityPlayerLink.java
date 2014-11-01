@@ -3,6 +3,7 @@ package com.mordenkainen.wormhole.tileentity;
 // Minecraft
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -23,8 +24,10 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Optional;
 
+
 // Google
 import com.google.common.collect.Iterables;
+
 
 // IC2
 import ic2.api.energy.tile.IEnergySink;
@@ -34,6 +37,8 @@ import cofh.api.energy.EnergyStorage;
 import cofh.api.energy.IEnergyContainerItem;
 import cofh.api.energy.IEnergyHandler;
 
+
+import com.mordenkainen.wormhole.config.Config;
 // Wormhole
 import com.mordenkainen.wormhole.mod.IC2Helper;
 
@@ -83,29 +88,31 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		}
 		if (!worldObj.isRemote) {
 			if (!isActive()) return;
-			if (storage.getEnergyStored() > 0) {
-				int toSend = storage.extractEnergy(10000, true);
-				int moved = 0;
-				IInventory playerInv = getPlayer().inventory;
-				for (int i = 0; i < playerInv.getSizeInventory(); i++) {
-					ItemStack stack = playerInv.getStackInSlot(i);
-					if (stack != null) {
-						if (stack.getItem() instanceof IEnergyContainerItem && 
-								((IEnergyContainerItem)stack.getItem()).getEnergyStored(stack) < ((IEnergyContainerItem)stack.getItem()).getMaxEnergyStored(stack)) {
-							moved += ((IEnergyContainerItem)stack.getItem()).receiveEnergy(stack, toSend - moved, false);
-							
-						} else {
-							if (Loader.isModLoaded("IC2")) {
-								moved += IC2Helper.chargeItem(stack, toSend - moved);
+			if (Config.enablePlayerLinkEnergy) {
+				if (storage.getEnergyStored() > 0) {
+					int toSend = storage.extractEnergy(10000, true);
+					int moved = 0;
+					IInventory playerInv = getPlayer().inventory;
+					for (int i = 0; i < playerInv.getSizeInventory(); i++) {
+						ItemStack stack = playerInv.getStackInSlot(i);
+						if (stack != null) {
+							if (stack.getItem() instanceof IEnergyContainerItem && 
+									((IEnergyContainerItem)stack.getItem()).getEnergyStored(stack) < ((IEnergyContainerItem)stack.getItem()).getMaxEnergyStored(stack)) {
+								moved += ((IEnergyContainerItem)stack.getItem()).receiveEnergy(stack, toSend - moved, false);
+								
+							} else {
+								if (Loader.isModLoaded("IC2")) {
+									moved += IC2Helper.chargeItem(stack, toSend - moved);
+								}
 							}
 						}
+						if (moved >= toSend) break;
 					}
-					if (moved >= toSend) break;
-				}
-				System.out.println("Total amount to remove from storage: " + moved);
-				if (moved > 0) {
-					storage.extractEnergy(moved, false);
-					System.out.println("Stored Amount: " + storage.getEnergyStored());
+					System.out.println("Total amount to remove from storage: " + moved);
+					if (moved > 0) {
+						storage.extractEnergy(moved, false);
+						System.out.println("Stored Amount: " + storage.getEnergyStored());
+					}
 				}
 			}
 		}
@@ -244,11 +251,13 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	// IEnergyHandler
 	@Override
 	public boolean canConnectEnergy(ForgeDirection from) {
+		if (!Config.enablePlayerLinkEnergy) return false;
 		return true;
 	}
 
 	@Override
 	public int receiveEnergy(ForgeDirection from, int maxReceive, boolean simulate) {
+		if (!Config.enablePlayerLinkEnergy) return 0;
 		if (!worldObj.isRemote) {
 			return storage.receiveEnergy(maxReceive, simulate);
 		}
@@ -262,11 +271,13 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public int getEnergyStored(ForgeDirection from) {
+		if (!Config.enablePlayerLinkEnergy) return 0;
 		return storage.getEnergyStored();
 	}
 
 	@Override
 	public int getMaxEnergyStored(ForgeDirection from) {
+		if (!Config.enablePlayerLinkEnergy) return 0;
 		return storage.getMaxEnergyStored();
 	}
 	
@@ -311,12 +322,14 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Optional.Method(modid = "IC2")
 	@Override
 	public boolean acceptsEnergyFrom(TileEntity arg0, ForgeDirection arg1) {
+		if (!Config.enablePlayerLinkEnergy) return false;
 		return true;
 	}
 
 	@Optional.Method(modid = "IC2")
 	@Override
 	public double getDemandedEnergy() {
+		if (!Config.enablePlayerLinkEnergy) return 0;
 		return (storage.getMaxEnergyStored() - storage.getEnergyStored()) / 4;
 	}
 
@@ -329,6 +342,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Optional.Method(modid = "IC2")
 	@Override
 	public double injectEnergy(ForgeDirection arg0, double arg1, double arg2) {
+		if (!Config.enablePlayerLinkEnergy) return arg1;
 		int stored = storage.receiveEnergy((int)arg1 * 4, false);
 		double ret = arg1 - (stored / 4);
 		return ret;
@@ -422,5 +436,4 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 			addedToEnet = true;
 		}
 	}
-	
 }

@@ -21,6 +21,7 @@ import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 //Wormhole
+import com.mordenkainen.wormhole.config.Config;
 import com.mordenkainen.wormhole.blocks.BlockEnum;
 import com.mordenkainen.wormhole.proxy.CommonProxy;
 import com.mordenkainen.wormhole.worldgen.WormholeGen;
@@ -49,6 +50,7 @@ public class Wormhole {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		instance = this;
+		Config.load(event.getSuggestedConfigurationFile());
 	}
 
 	@EventHandler

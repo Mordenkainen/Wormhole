@@ -4,7 +4,6 @@ package com.mordenkainen.wormhole.proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-
 import net.minecraft.init.Blocks;
 // Minecraft
 import net.minecraft.init.Items;
@@ -20,9 +19,11 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 
 
+
 // Wormhole
 import com.mordenkainen.wormhole.Wormhole;
 import com.mordenkainen.wormhole.blocks.BlockEnum;
+import com.mordenkainen.wormhole.config.Config;
 import com.mordenkainen.wormhole.items.ItemEnum;
 import com.mordenkainen.wormhole.net.packet.PacketEffect;
 import com.mordenkainen.wormhole.tileentity.TileEntityPlayerLink;
@@ -60,7 +61,9 @@ public class CommonProxy {
 		GameRegistry.addSmelting(new ItemStack(ItemEnum.QUANTUMCRYSTAL.getItemInstance(), 1, 0), new ItemStack(ItemEnum.QUANTUMCRYSTAL.getItemInstance(),1,1), 0);
 		GameRegistry.addSmelting(ItemEnum.WORMHOLEANCHOR.getItemInstance(), new ItemStack(ItemEnum.WORMHOLEANCHOR.getItemInstance(),1), 0);
 		GameRegistry.addRecipe(new ItemStack(ItemEnum.WORMHOLEANCHOR.getItemInstance(),1), "CCC", "CEC", "CCC", 'C', new ItemStack(ItemEnum.QUANTUMCRYSTAL.getItemInstance(),1,1), 'E', Items.ender_pearl);
-		GameRegistry.addRecipe(new ItemStack(Item.getItemFromBlock(BlockEnum.PLAYERLINK.getBlockInstance()),1), "DWD", "WCW", "DWD", 'D', Items.diamond, 'W', new ItemStack(ItemEnum.WORMHOLEANCHOR.getItemInstance(),1), 'C', Blocks.chest);
+		if (Config.enablePlayerLink) {
+			GameRegistry.addRecipe(new ItemStack(Item.getItemFromBlock(BlockEnum.PLAYERLINK.getBlockInstance()),1), "DWD", "WCW", "DWD", 'D', Items.diamond, 'W', new ItemStack(ItemEnum.WORMHOLEANCHOR.getItemInstance(),1), 'C', Blocks.chest);
+		}
 	}
 	
 	public void RegisterPackets() {
