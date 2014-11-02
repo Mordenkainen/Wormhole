@@ -5,6 +5,7 @@ import net.minecraft.item.Item;
 public enum ItemEnum {
 	WORMHOLEANCHOR(ItemWormHoleAnchor.class),
 	QUANTUMCRYSTAL(ItemQuantumCrystal.class),
+	STORAGECORE(ItemStorageCore.class),
 	CAMOTOOL(ItemCamoTool.class);
 
 	private Item item;
