@@ -5,6 +5,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 
 import net.minecraft.block.Block;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
@@ -25,8 +26,10 @@ import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Optional;
 
 
+
 // Google
 import com.google.common.collect.Iterables;
+
 
 
 // IC2
@@ -36,6 +39,7 @@ import ic2.api.energy.tile.IEnergySink;
 import cofh.api.energy.EnergyStorage;
 import cofh.api.energy.IEnergyContainerItem;
 import cofh.api.energy.IEnergyHandler;
+
 
 
 import com.mordenkainen.wormhole.config.Config;
@@ -49,12 +53,12 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
     public EnergyStorage storage = new EnergyStorage(60000);
     public boolean silkTouched = false;
     public GameProfile owner = null;
+    private boolean addedToEnet;
     
 	private static final int[] armorSlots;
 	private static final int[] invSlots;
 	private static final int[] hotbarSlots;
 	private static final int numSlots;
-	private boolean addedToEnet;
 
 	static {
 		numSlots = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0);
@@ -166,49 +170,37 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	// IInventory
 	@Override
 	public int getSizeInventory() {
-		if (isActive()) {
-			return numSlots;
-		}
-		return 0;
+		return isActive() ? numSlots : 0;
 	}
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
-		if (isActive()) {
-			return getPlayer().inventory.getStackInSlot(getAdjustedSlot(slot));
-		}
-		return null;
+		return isActive() ? getPlayer().inventory.getStackInSlot(getAdjustedSlot(slot)) : null;
 	}
 
 	@Override
 	public ItemStack decrStackSize(int slot, int numItems) {
-		if (isActive()) {
-			return getPlayer().inventory.decrStackSize(getAdjustedSlot(slot), numItems);
-		}
-		return null;
+		return isActive() ? getPlayer().inventory.decrStackSize(getAdjustedSlot(slot), numItems) : null;
 	}
 
 	@Override
 	public ItemStack getStackInSlotOnClosing(int slot) {
-		if (isActive()) {
-			return getPlayer().inventory.getStackInSlotOnClosing(getAdjustedSlot(slot));
-		}
-		return null;
+		return isActive() ? getPlayer().inventory.getStackInSlotOnClosing(getAdjustedSlot(slot)) : null;
 	}
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
 		if (isActive()) {
 			getPlayer().inventory.setInventorySlotContents(getAdjustedSlot(slot), stack);
+		} else if (worldObj != null && !worldObj.isRemote) {
+			EntityItem toDrop = new EntityItem(worldObj, xCoord, yCoord, zCoord, stack);
+            worldObj.spawnEntityInWorld(toDrop);
 		}
 	}
 
 	@Override
 	public String getInventoryName() {
-		if (isActive()) {
-			getPlayer().inventory.getInventoryName();
-		}
-		return "";
+		return isActive() ? getPlayer().inventory.getInventoryName() : "";
 	}
 
 	@Override
@@ -218,10 +210,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public int getInventoryStackLimit() {
-		if (isActive()) {
-			return getPlayer().inventory.getInventoryStackLimit();
-		}
-		return 0;
+		return isActive() ? getPlayer().inventory.getInventoryStackLimit() : 0;
 	}
 
 	@Override
@@ -241,7 +230,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 			int adjSlot = getAdjustedSlot(slot);
 			if (adjSlot > 35) {
 				int armorTypeForSlot = 39 - adjSlot;
-				return stack.getItem().isValidArmor(stack, armorTypeForSlot, getPlayer());
+				return stack != null ? stack.getItem().isValidArmor(stack, armorTypeForSlot, getPlayer()) :  false;
 			}
 			return getPlayer().inventory.isItemValidForSlot(adjSlot, stack);
 		}
@@ -266,32 +255,26 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public boolean canInsertItem(int slot, ItemStack stack, int side) {
-		if (isActive()) {
-			return true;
-		}
-		return false;
+		return isActive();
 	}
 
 	@Override
 	public boolean canExtractItem(int slot, ItemStack stack, int side) {
-		if (isActive()) {
-			return true;
-		}
-		return false;
+		return isActive();
 	}
 	
 	// IEnergyHandler
 	@Override
 	public boolean canConnectEnergy(ForgeDirection from) {
-		if (!Config.enablePlayerLinkEnergy) return false;
-		return true;
+		return Config.enablePlayerLinkEnergy;
 	}
 
 	@Override
 	public int receiveEnergy(ForgeDirection from, int maxReceive, boolean simulate) {
-		if (!Config.enablePlayerLinkEnergy) return 0;
-		if (!worldObj.isRemote) {
-			return storage.receiveEnergy(maxReceive, simulate);
+		if (Config.enablePlayerLinkEnergy) {
+			if (!worldObj.isRemote) {
+				return storage.receiveEnergy(maxReceive, simulate);
+			}
 		}
 		return 0;
 	}
@@ -303,14 +286,12 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public int getEnergyStored(ForgeDirection from) {
-		if (!Config.enablePlayerLinkEnergy) return 0;
-		return storage.getEnergyStored();
+		return Config.enablePlayerLinkEnergy ? storage.getEnergyStored() : 0;
 	}
 
 	@Override
 	public int getMaxEnergyStored(ForgeDirection from) {
-		if (!Config.enablePlayerLinkEnergy) return 0;
-		return storage.getMaxEnergyStored();
+		return Config.enablePlayerLinkEnergy ? storage.getMaxEnergyStored() : 0;
 	}
 	
 	// ICamo
@@ -354,15 +335,13 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Optional.Method(modid = "IC2")
 	@Override
 	public boolean acceptsEnergyFrom(TileEntity arg0, ForgeDirection arg1) {
-		if (!Config.enablePlayerLinkEnergy) return false;
-		return true;
+		return Config.enablePlayerLinkEnergy;
 	}
 
 	@Optional.Method(modid = "IC2")
 	@Override
 	public double getDemandedEnergy() {
-		if (!Config.enablePlayerLinkEnergy) return 0;
-		return (storage.getMaxEnergyStored() - storage.getEnergyStored()) / 4;
+		return Config.enablePlayerLinkEnergy ? (storage.getMaxEnergyStored() - storage.getEnergyStored()) / 4 : 0;
 	}
 
 	@Optional.Method(modid = "IC2")
@@ -373,15 +352,13 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Optional.Method(modid = "IC2")
 	@Override
-	public double injectEnergy(ForgeDirection arg0, double arg1, double arg2) {
+	public double injectEnergy(ForgeDirection side, double arg1, double arg2) {
 		if (!Config.enablePlayerLinkEnergy) return arg1;
 		int stored = storage.receiveEnergy((int)arg1 * 4, false);
-		double ret = arg1 - (stored / 4);
-		return ret;
+		return arg1 - (stored / 4);
 	}
 	
 	// End of Overrides
-
 	public void writeData(NBTTagCompound tags) {
 		if (owner != null) {
             NBTTagCompound nbttagcompound1 = new NBTTagCompound();
@@ -429,7 +406,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		if (owner != null) {
 			for (Object playerObj : MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
 				if (playerObj instanceof EntityPlayer) {
-					if (((EntityPlayer)playerObj).getCommandSenderName().equals(owner.getName())) {
+					if (((EntityPlayer)playerObj).getGameProfile().getId().equals(owner.getId())) {
 						return (EntityPlayer)playerObj;
 					}
 				}
