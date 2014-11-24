@@ -6,6 +6,7 @@ public enum ItemEnum {
 	WORMHOLEANCHOR(ItemWormHoleAnchor.class),
 	QUANTUMCRYSTAL(ItemQuantumCrystal.class),
 	STORAGECORE(ItemStorageCore.class),
+	LIFECORE(ItemLifeCore.class),
 	CAMOTOOL(ItemCamoTool.class);
 
 	private Item item;
