@@ -50,11 +50,42 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
     public boolean silkTouched = false;
     public GameProfile owner = null;
     
-	private static final int[] armorSlots = new int[] {36,37,38,39};
-	private static final int[] invSlots = new int[] {9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
-	private static final int[] hotbarSlots= new int[] {0,1,2,3,4,5,6,7,8};
-	
+	private static final int[] armorSlots;
+	private static final int[] invSlots;
+	private static final int[] hotbarSlots;
+	private static final int numSlots;
 	private boolean addedToEnet;
+
+	static {
+		numSlots = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0);
+		if (Config.enablePlayerLinkHotbar) {
+			hotbarSlots= new int[] {0,1,2,3,4,5,6,7,8};
+		} else {
+			hotbarSlots= new int[] {};
+		}
+		if (Config.enablePlayerLinkInv) {
+			if (Config.enablePlayerLinkHotbar) {
+				invSlots = new int[] {9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
+			} else {
+				invSlots = new int[] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26};
+			}
+		} else {
+			invSlots = new int[] {};
+		}
+		if (Config.enablePlayerLinkArmor) {
+			if (Config.enablePlayerLinkHotbar && Config.enablePlayerLinkInv) {
+				armorSlots = new int[] {36,37,38,39};
+			} else if (!Config.enablePlayerLinkHotbar && !Config.enablePlayerLinkInv) {
+				armorSlots = new int[] {0,1,2,3};
+			} else if (Config.enablePlayerLinkHotbar && !Config.enablePlayerLinkInv) {
+				armorSlots = new int[] {9,10,11,12};
+			} else {
+				armorSlots = new int[] {27,28,29,30};
+			}
+		} else {
+			armorSlots = new int[] {};
+		}
+	}
 	
 	// TileEntity
 	@Override
@@ -136,7 +167,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Override
 	public int getSizeInventory() {
 		if (isActive()) {
-			return getPlayer().inventory.getSizeInventory();
+			return numSlots;
 		}
 		return 0;
 	}
@@ -144,7 +175,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Override
 	public ItemStack getStackInSlot(int slot) {
 		if (isActive()) {
-			return getPlayer().inventory.getStackInSlot(slot);
+			return getPlayer().inventory.getStackInSlot(getAdjustedSlot(slot));
 		}
 		return null;
 	}
@@ -152,7 +183,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Override
 	public ItemStack decrStackSize(int slot, int numItems) {
 		if (isActive()) {
-			return getPlayer().inventory.decrStackSize(slot, numItems);
+			return getPlayer().inventory.decrStackSize(getAdjustedSlot(slot), numItems);
 		}
 		return null;
 	}
@@ -160,7 +191,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Override
 	public ItemStack getStackInSlotOnClosing(int slot) {
 		if (isActive()) {
-			return getPlayer().inventory.getStackInSlotOnClosing(slot);
+			return getPlayer().inventory.getStackInSlotOnClosing(getAdjustedSlot(slot));
 		}
 		return null;
 	}
@@ -168,7 +199,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
 		if (isActive()) {
-			getPlayer().inventory.setInventorySlotContents(slot, stack);
+			getPlayer().inventory.setInventorySlotContents(getAdjustedSlot(slot), stack);
 		}
 	}
 
@@ -207,11 +238,12 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack stack) {
 		if (isActive()) {
-			if (slot > 35) {
-				int armorTypeForSlot = 39 - slot;
+			int adjSlot = getAdjustedSlot(slot);
+			if (adjSlot > 35) {
+				int armorTypeForSlot = 39 - adjSlot;
 				return stack.getItem().isValidArmor(stack, armorTypeForSlot, getPlayer());
 			}
-			return getPlayer().inventory.isItemValidForSlot(slot, stack);
+			return getPlayer().inventory.isItemValidForSlot(adjSlot, stack);
 		}
 		return false;
 	}
@@ -229,7 +261,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 					return invSlots;
 			}
 		}
-		return null;
+		return new int[] {};
 	}
 
 	@Override
@@ -435,5 +467,12 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 			IC2Helper.registerTile(this);
 			addedToEnet = true;
 		}
+	}
+	
+	public int getAdjustedSlot(int slot) {
+		if (Config.enablePlayerLinkHotbar && (Config.enablePlayerLinkInv || (!Config.enablePlayerLinkInv && !Config.enablePlayerLinkArmor))) return slot;
+		if (Config.enablePlayerLinkInv) return slot + 9;
+		if (!Config.enablePlayerLinkHotbar && Config.enablePlayerLinkArmor) return slot + 36;
+		return slot < 9 ? slot : slot + 27;
 	}
 }
