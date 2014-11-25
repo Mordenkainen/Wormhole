@@ -70,7 +70,7 @@ public class ItemQuantumCrystal extends Item {
 	@Override
     public IIcon getIconFromDamage(int damage) {
 		if (damage == 0) {
-			int step = ((int) Minecraft.getSystemTime()/100) % 32;
+			int step = ((int) (Minecraft.getSystemTime()/100)) % 32;
 			int icon = step > 15 ? 16 - (step - 15) : step;
 	        return unstableIcons[icon];
 		}

@@ -1,14 +1,15 @@
+// TODO: bring both isItemValid and canInsertItem into alignment
 package com.mordenkainen.wormhole.tileentity;
 
 // Minecraft
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
-
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
+import net.minecraft.item.ItemFood;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
@@ -21,16 +22,13 @@ import net.minecraft.util.StringUtils;
 
 // Forge
 import net.minecraftforge.common.util.ForgeDirection;
+import net.minecraftforge.event.ForgeEventFactory;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Optional;
 
-
-
 // Google
 import com.google.common.collect.Iterables;
-
-
 
 // IC2
 import ic2.api.energy.tile.IEnergySink;
@@ -40,11 +38,9 @@ import cofh.api.energy.EnergyStorage;
 import cofh.api.energy.IEnergyContainerItem;
 import cofh.api.energy.IEnergyHandler;
 
-
-
-import com.mordenkainen.wormhole.config.Config;
 // Wormhole
 import com.mordenkainen.wormhole.mod.IC2Helper;
+import com.mordenkainen.wormhole.config.Config;
 
 @Optional.Interface(iface = "ic2.api.energy.tile.IEnergySink", modid = "IC2")
 public class TileEntityPlayerLink extends TileEntity implements ISidedInventory, IEnergyHandler, ICamo, IEnergySink  {
@@ -61,33 +57,30 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	private static final int numSlots;
 
 	static {
-		numSlots = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0);
+		int maxSlot = 0;
+		int[] slots;
+		int i;
+		numSlots = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0) + (Config.enablePlayerLinkFood ? 1 : 0);
 		if (Config.enablePlayerLinkHotbar) {
 			hotbarSlots= new int[] {0,1,2,3,4,5,6,7,8};
+			maxSlot = 9;
 		} else {
 			hotbarSlots= new int[] {};
 		}
 		if (Config.enablePlayerLinkInv) {
-			if (Config.enablePlayerLinkHotbar) {
-				invSlots = new int[] {9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35};
-			} else {
-				invSlots = new int[] {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26};
-			}
+			slots = new int[27];
+			for (i = 0; i < slots.length; i++) slots[i] = i + maxSlot;
+			maxSlot += i;
+			invSlots = slots.clone();
 		} else {
 			invSlots = new int[] {};
 		}
 		if (Config.enablePlayerLinkArmor) {
-			if (Config.enablePlayerLinkHotbar && Config.enablePlayerLinkInv) {
-				armorSlots = new int[] {36,37,38,39};
-			} else if (!Config.enablePlayerLinkHotbar && !Config.enablePlayerLinkInv) {
-				armorSlots = new int[] {0,1,2,3};
-			} else if (Config.enablePlayerLinkHotbar && !Config.enablePlayerLinkInv) {
-				armorSlots = new int[] {9,10,11,12};
-			} else {
-				armorSlots = new int[] {27,28,29,30};
-			}
+			slots = Config.enablePlayerLinkFood ? new int[5] : new int [4];
+			for (i = 0; i < slots.length; i++) slots[i] = i + maxSlot;
+			armorSlots = slots.clone();
 		} else {
-			armorSlots = new int[] {};
+			armorSlots = Config.enablePlayerLinkFood ? new int[] {maxSlot} : new int [] {};
 		}
 	}
 	
@@ -143,10 +136,8 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 						}
 						if (moved >= toSend) break;
 					}
-					System.out.println("Total amount to remove from storage: " + moved);
 					if (moved > 0) {
 						storage.extractEnergy(moved, false);
-						System.out.println("Stored Amount: " + storage.getEnergyStored());
 					}
 				}
 			}
@@ -175,7 +166,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
-		return isActive() ? getPlayer().inventory.getStackInSlot(getAdjustedSlot(slot)) : null;
+		return isActive() ? getAdjustedSlot(slot) < 40 ? getPlayer().inventory.getStackInSlot(getAdjustedSlot(slot)) : null : null;
 	}
 
 	@Override
@@ -185,13 +176,30 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public ItemStack getStackInSlotOnClosing(int slot) {
-		return isActive() ? getPlayer().inventory.getStackInSlotOnClosing(getAdjustedSlot(slot)) : null;
+		return isActive() ? getAdjustedSlot(slot) < 40 ? getPlayer().inventory.getStackInSlotOnClosing(getAdjustedSlot(slot)) : null : null;
 	}
 
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
 		if (isActive()) {
-			getPlayer().inventory.setInventorySlotContents(getAdjustedSlot(slot), stack);
+			if (Config.enablePlayerLinkFood && slot == 40) {
+				EntityPlayer player = getPlayer();
+				if(stack != null) {
+                    int startValue = stack.stackSize;
+                    while(stack.stackSize > 0) {
+                        ItemStack remainingItem = stack.onFoodEaten(player.worldObj, player);
+                        remainingItem = ForgeEventFactory.onItemUseFinish(player, stack, 0, remainingItem);
+                        if(remainingItem != null && remainingItem.stackSize > 0 && (remainingItem != stack || remainingItem.stackSize != startValue)) {
+                            if(!player.inventory.addItemStackToInventory(remainingItem)) {
+                                player.dropPlayerItemWithRandomChoice(remainingItem, false);
+                            }
+                        }
+                        if(stack.stackSize == startValue) break;
+                    }
+                }
+			} else {
+				getPlayer().inventory.setInventorySlotContents(getAdjustedSlot(slot), stack);
+			}
 		} else if (worldObj != null && !worldObj.isRemote) {
 			EntityItem toDrop = new EntityItem(worldObj, xCoord, yCoord, zCoord, stack);
             worldObj.spawnEntityInWorld(toDrop);
@@ -226,18 +234,20 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public boolean isItemValidForSlot(int slot, ItemStack stack) {
-		if (isActive()) {
-			int adjSlot = getAdjustedSlot(slot);
-			if (adjSlot > 35) {
-				int armorTypeForSlot = 39 - adjSlot;
-				return stack != null ? stack.getItem().isValidArmor(stack, armorTypeForSlot, getPlayer()) :  false;
-			}
-			return getPlayer().inventory.isItemValidForSlot(adjSlot, stack);
-		}
-		return false;
+		return isItemValid(slot, stack);
 	}
 
 	// ISidedInventory
+	@Override
+	public boolean canInsertItem(int slot, ItemStack stack, int side) {
+		return isItemValid(slot, stack);
+	}
+
+	@Override
+	public boolean canExtractItem(int slot, ItemStack stack, int side) {
+		return isActive();
+	}
+	
 	@Override
 	public int[] getAccessibleSlotsFromSide(int side) {
 		if (isActive()) {
@@ -253,16 +263,6 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		return new int[] {};
 	}
 
-	@Override
-	public boolean canInsertItem(int slot, ItemStack stack, int side) {
-		return isActive();
-	}
-
-	@Override
-	public boolean canExtractItem(int slot, ItemStack stack, int side) {
-		return isActive();
-	}
-	
 	// IEnergyHandler
 	@Override
 	public boolean canConnectEnergy(ForgeDirection from) {
@@ -447,9 +447,37 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	}
 	
 	public int getAdjustedSlot(int slot) {
+		if (Config.enablePlayerLinkFood && slot == armorSlots[armorSlots.length - 1]) return 40;
 		if (Config.enablePlayerLinkHotbar && (Config.enablePlayerLinkInv || (!Config.enablePlayerLinkInv && !Config.enablePlayerLinkArmor))) return slot;
 		if (Config.enablePlayerLinkInv) return slot + 9;
 		if (!Config.enablePlayerLinkHotbar && Config.enablePlayerLinkArmor) return slot + 36;
 		return slot < 9 ? slot : slot + 27;
+	}
+	
+	private int getFoodValue(ItemStack item){
+        return item != null && item.getItem() instanceof ItemFood ? ((ItemFood)item.getItem()).func_150905_g(item) : 0;
+    }
+	
+	private boolean isItemValid(int slot, ItemStack stack) {
+		if (!isActive()) return false;
+		int adjSlot = getAdjustedSlot(slot);
+		if (Config.enablePlayerLinkArmor) {
+			if (adjSlot >= 36 && adjSlot <= 39) {
+				int armorTypeForSlot = 39 - adjSlot;
+				return stack != null ? stack.getItem().isValidArmor(stack, armorTypeForSlot, getPlayer()) :  false;
+			}
+		}
+		if (Config.enablePlayerLinkFood && adjSlot == 40) {
+			if (getFoodValue(stack) > 0) {
+				EntityPlayer player = getPlayer();
+				int curFoodLevel = player.getFoodStats().getFoodLevel();
+				if(20 - curFoodLevel >= getFoodValue(stack) * stack.stackSize) {
+	                return true;
+	            }
+			}
+			return false;
+		}
+		
+		return getPlayer().inventory.isItemValidForSlot(adjSlot, stack);
 	}
 }

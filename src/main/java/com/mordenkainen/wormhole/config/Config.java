@@ -11,6 +11,7 @@ public class Config {
 	public static boolean enablePlayerLinkInv;
 	public static boolean enablePlayerLinkHotbar;
 	public static boolean enablePlayerLinkEnergy;
+	public static boolean enablePlayerLinkFood;
 	
 	public static void load(File configFile) {
 		Configuration config = new Configuration(configFile);
@@ -35,6 +36,10 @@ public class Config {
 		Property playerLinkEnergyProperty = config.get("PlayerLink", "CanChargeItems", true);
 		playerLinkEnergyProperty.comment = "Set to true to allow the PlayerLink to charge items in the players inventory.";
 		enablePlayerLinkEnergy = playerLinkEnergyProperty.getBoolean(true);
+		
+		Property playerLinkFoodProperty = config.get("PlayerLink", "CanFeedPlayer", true);
+		playerLinkFoodProperty.comment = "Set to true to allow the PlayerLink to feed players food sent to the bottom.";
+		enablePlayerLinkFood = playerLinkFoodProperty.getBoolean(true);
 		
 		config.save();
 	}
