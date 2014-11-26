@@ -3,12 +3,14 @@ package com.mordenkainen.wormhole.tileentity;
 // Minecraft
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.ISidedInventory;
 import net.minecraft.item.ItemFood;
+import net.minecraft.item.ItemPotion;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
@@ -59,7 +61,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		int maxSlot = 0;
 		int[] slots;
 		int i;
-		numSlots = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0) + (Config.enablePlayerLinkFood ? 1 : 0);
+		numSlots = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0) + (Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? 1 : 0);
 		if (Config.enablePlayerLinkHotbar) {
 			hotbarSlots= new int[] {0,1,2,3,4,5,6,7,8};
 			maxSlot = 9;
@@ -75,11 +77,11 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 			invSlots = new int[] {};
 		}
 		if (Config.enablePlayerLinkArmor) {
-			slots = Config.enablePlayerLinkFood ? new int[5] : new int [4];
+			slots = Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? new int[5] : new int [4];
 			for (i = 0; i < slots.length; i++) slots[i] = i + maxSlot;
 			armorSlots = slots.clone();
 		} else {
-			armorSlots = Config.enablePlayerLinkFood ? new int[] {maxSlot} : new int [] {};
+			armorSlots = Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? new int[] {maxSlot} : new int [] {};
 		}
 	}
 	
@@ -170,7 +172,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public ItemStack decrStackSize(int slot, int numItems) {
-		return isActive() ? getPlayer().inventory.decrStackSize(getAdjustedSlot(slot), numItems) : null;
+		return isActive() ? getAdjustedSlot(slot) < 40 ? getPlayer().inventory.decrStackSize(getAdjustedSlot(slot), numItems) : null : null;
 	}
 
 	@Override
@@ -181,12 +183,20 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Override
 	public void setInventorySlotContents(int slot, ItemStack stack) {
 		if (isActive()) {
-			if (Config.enablePlayerLinkFood && slot == 40) {
-				EntityPlayer player = getPlayer();
-				if(stack != null) {
-                    int startValue = stack.stackSize;
+			EntityPlayer player = getPlayer();
+			int adjSlot = getAdjustedSlot(slot);
+			if (adjSlot == 40) {
+				if(Config.enablePlayerLinkPotions && stack != null && stack.getItem() instanceof ItemPotion){
+                    ItemStack remainingItem = stack.onFoodEaten(player.worldObj, player);
+                    remainingItem = ForgeEventFactory.onItemUseFinish(player, stack, 0, remainingItem);
+                    if(remainingItem != null && remainingItem.stackSize > 0 && remainingItem != stack) {
+                        if(!player.inventory.addItemStackToInventory(remainingItem)) {
+                            player.dropPlayerItemWithRandomChoice(remainingItem, false);
+                        }
+                    }
+				} else if(Config.enablePlayerLinkFood && stack != null){
+					int startValue = stack.stackSize;
                     while(stack.stackSize > 0 && player.getFoodStats().getFoodLevel() < 20) {
-                    	int a = player.getFoodStats().getFoodLevel();
                         ItemStack remainingItem = stack.onFoodEaten(player.worldObj, player);
                         remainingItem = ForgeEventFactory.onItemUseFinish(player, stack, 0, remainingItem);
                         if(remainingItem != null && remainingItem.stackSize > 0 && remainingItem != stack) {
@@ -201,11 +211,11 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
                             player.dropPlayerItemWithRandomChoice(stack, false);
                         }
                     }
-                }
+				}
 			} else {
-				getPlayer().inventory.setInventorySlotContents(getAdjustedSlot(slot), stack);
+				player.inventory.setInventorySlotContents(getAdjustedSlot(slot), stack);
 			}
-		} else if (worldObj != null && !worldObj.isRemote) {
+		} else if (worldObj != null && !worldObj.isRemote && stack != null) {
 			EntityItem toDrop = new EntityItem(worldObj, xCoord, yCoord, zCoord, stack);
             worldObj.spawnEntityInWorld(toDrop);
 		}
@@ -250,7 +260,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public boolean canExtractItem(int slot, ItemStack stack, int side) {
-		return isActive();
+		return getAdjustedSlot(slot) < 40 ? isActive() : false;
 	}
 	
 	@Override
@@ -449,7 +459,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	}
 	
 	public int getAdjustedSlot(int slot) {
-		if (Config.enablePlayerLinkFood && slot == armorSlots[armorSlots.length - 1]) return 40;
+		if ((Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions )&& slot == armorSlots[armorSlots.length - 1]) return 40;
 		if (Config.enablePlayerLinkHotbar && (Config.enablePlayerLinkInv || (!Config.enablePlayerLinkInv && !Config.enablePlayerLinkArmor))) return slot;
 		if (Config.enablePlayerLinkInv) return slot + 9;
 		if (!Config.enablePlayerLinkHotbar && Config.enablePlayerLinkArmor) return slot + 36;
@@ -461,20 +471,20 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
     }
 	
 	private boolean isItemValid(int slot, ItemStack stack) {
-		if (!isActive()) return false;
+		if (!isActive() && stack == null) return false;
 		int adjSlot = getAdjustedSlot(slot);
-		if (Config.enablePlayerLinkArmor) {
-			if (adjSlot >= 36 && adjSlot <= 39) {
-				int armorTypeForSlot = 39 - adjSlot;
-				return stack != null ? stack.getItem().isValidArmor(stack, armorTypeForSlot, getPlayer()) :  false;
-			}
+		if (Config.enablePlayerLinkArmor && adjSlot >= 36 && adjSlot <= 39) {
+			int armorTypeForSlot = 39 - adjSlot;
+			return stack.getItem().isValidArmor(stack, armorTypeForSlot, getPlayer());
 		}
-		if (Config.enablePlayerLinkFood && adjSlot == 40) {
-			if (getFoodValue(stack) > 0) {
-				int curFoodLevel = getPlayer().getFoodStats().getFoodLevel();
-				if(20 - curFoodLevel >= getFoodValue(stack)) {
+		if (adjSlot == 40) {
+			if (Config.enablePlayerLinkFood && getFoodValue(stack) > 0) {
+				if(20 - getPlayer().getFoodStats().getFoodLevel() >= getFoodValue(stack)) {
 	                return true;
 	            }
+			}
+			if (Config.enablePlayerLinkPotions) {
+		        return stack.getItem() instanceof ItemPotion;
 			}
 			return false;
 		}

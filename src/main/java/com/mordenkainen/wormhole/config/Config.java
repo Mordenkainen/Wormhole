@@ -12,6 +12,7 @@ public class Config {
 	public static boolean enablePlayerLinkHotbar;
 	public static boolean enablePlayerLinkEnergy;
 	public static boolean enablePlayerLinkFood;
+	public static boolean enablePlayerLinkPotions;
 	
 	public static void load(File configFile) {
 		Configuration config = new Configuration(configFile);
@@ -40,6 +41,10 @@ public class Config {
 		Property playerLinkFoodProperty = config.get("PlayerLink", "CanFeedPlayer", true);
 		playerLinkFoodProperty.comment = "Set to true to allow the PlayerLink to feed players food sent to the bottom.";
 		enablePlayerLinkFood = playerLinkFoodProperty.getBoolean(true);
+		
+		Property playerLinkPotionProperty = config.get("PlayerLink", "CanUsePotions", true);
+		playerLinkPotionProperty.comment = "Set to true to allow the PlayerLink to apply potion effects to the player using potions sent to the bottom.";
+		enablePlayerLinkPotions = playerLinkPotionProperty.getBoolean(true);
 		
 		config.save();
 	}
