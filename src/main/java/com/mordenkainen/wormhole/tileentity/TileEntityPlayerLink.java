@@ -1,4 +1,3 @@
-// TODO: bring both isItemValid and canInsertItem into alignment
 package com.mordenkainen.wormhole.tileentity;
 
 // Minecraft
@@ -186,15 +185,21 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 				EntityPlayer player = getPlayer();
 				if(stack != null) {
                     int startValue = stack.stackSize;
-                    while(stack.stackSize > 0) {
+                    while(stack.stackSize > 0 && player.getFoodStats().getFoodLevel() < 20) {
+                    	int a = player.getFoodStats().getFoodLevel();
                         ItemStack remainingItem = stack.onFoodEaten(player.worldObj, player);
                         remainingItem = ForgeEventFactory.onItemUseFinish(player, stack, 0, remainingItem);
-                        if(remainingItem != null && remainingItem.stackSize > 0 && (remainingItem != stack || remainingItem.stackSize != startValue)) {
+                        if(remainingItem != null && remainingItem.stackSize > 0 && remainingItem != stack) {
                             if(!player.inventory.addItemStackToInventory(remainingItem)) {
                                 player.dropPlayerItemWithRandomChoice(remainingItem, false);
                             }
                         }
                         if(stack.stackSize == startValue) break;
+                    }
+                    if (stack.stackSize > 0) {
+                    	if(!player.inventory.addItemStackToInventory(stack)) {
+                            player.dropPlayerItemWithRandomChoice(stack, false);
+                        }
                     }
                 }
 			} else {
@@ -250,17 +255,14 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	
 	@Override
 	public int[] getAccessibleSlotsFromSide(int side) {
-		if (isActive()) {
-			switch (side) {
-				case 0:
-					return hotbarSlots;
-				case 1:
-					return armorSlots;
-				default:
-					return invSlots;
-			}
+		switch (side) {
+			case 0:
+				return hotbarSlots;
+			case 1:
+				return armorSlots;
+			default:
+				return invSlots;
 		}
-		return new int[] {};
 	}
 
 	// IEnergyHandler
@@ -469,9 +471,8 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		}
 		if (Config.enablePlayerLinkFood && adjSlot == 40) {
 			if (getFoodValue(stack) > 0) {
-				EntityPlayer player = getPlayer();
-				int curFoodLevel = player.getFoodStats().getFoodLevel();
-				if(20 - curFoodLevel >= getFoodValue(stack) * stack.stackSize) {
+				int curFoodLevel = getPlayer().getFoodStats().getFoodLevel();
+				if(20 - curFoodLevel >= getFoodValue(stack)) {
 	                return true;
 	            }
 			}
