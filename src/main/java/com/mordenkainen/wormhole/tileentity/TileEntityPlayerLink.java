@@ -58,13 +58,13 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
     public boolean silkTouched = false;
     public GameProfile owner = null;
     private boolean addedToEnet;
-    private int currentMana = 0;
+    public int currentMana = 0;
     
 	private static final int[] armorSlots;
 	private static final int[] invSlots;
 	private static final int[] hotbarSlots;
 	private static final int numSlots;
-	private static final int MAX_MANA = 100000;
+	public static final int MAX_MANA = 100000;
 
 	static {
 		int maxSlot = 0;
@@ -390,13 +390,13 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Optional.Method(modid = "Botania")
 	@Override
 	public boolean isFull() {
-		return currentMana >= MAX_MANA;
+		return currentMana == MAX_MANA;
 	}
 
 	@Optional.Method(modid = "Botania")
 	@Override
 	public void recieveMana(int mana) {
-		currentMana += mana;
+		currentMana += Math.min(mana, MAX_MANA - currentMana);
 	}
 	
 	// End of Overrides
