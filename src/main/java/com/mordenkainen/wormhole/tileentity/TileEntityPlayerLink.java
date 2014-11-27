@@ -64,7 +64,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	private static final int[] invSlots;
 	private static final int[] hotbarSlots;
 	private static final int numSlots;
-	private static final int MAXMANA = 100000;
+	private static final int MAX_MANA = 100000;
 
 	static {
 		int maxSlot = 0;
@@ -136,21 +136,16 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 						if (stack.getItem() instanceof IEnergyContainerItem && 
 								((IEnergyContainerItem)stack.getItem()).getEnergyStored(stack) < ((IEnergyContainerItem)stack.getItem()).getMaxEnergyStored(stack)) {
 							moved += ((IEnergyContainerItem)stack.getItem()).receiveEnergy(stack, toSend - moved, false);
-							
-						} else {
-							if (ModHelper.IC2Loaded) {
+						} else if (ModHelper.IC2Loaded) {
 								moved += IC2Helper.chargeItem(stack, toSend - moved);
-							}
 						}
 					}
 					if (Config.enablePlayerLinkMana && ModHelper.BotaniaLoaded) {
-							currentMana -= BotaniaHelper.chargeItem(stack, currentMana);
+						currentMana -= BotaniaHelper.chargeItem(stack, currentMana);
 					}
 				}
 			}
-			if (moved > 0) {
-				storage.extractEnergy(moved, false);
-			}
+			if (moved > 0) storage.extractEnergy(moved, false);
 		}
 	}
 				
@@ -395,15 +390,13 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Optional.Method(modid = "Botania")
 	@Override
 	public boolean isFull() {
-		return currentMana >= MAXMANA;
+		return currentMana >= MAX_MANA;
 	}
 
 	@Optional.Method(modid = "Botania")
 	@Override
 	public void recieveMana(int mana) {
 		currentMana += mana;
-		System.out.println(currentMana);
-		
 	}
 	
 	// End of Overrides
@@ -499,7 +492,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	}
 	
 	public int getAdjustedSlot(int slot) {
-		if ((Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions )&& slot == armorSlots[armorSlots.length - 1]) return 40;
+		if ((Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ) && slot == armorSlots[armorSlots.length - 1]) return 40;
 		if (Config.enablePlayerLinkHotbar && (Config.enablePlayerLinkInv || (!Config.enablePlayerLinkInv && !Config.enablePlayerLinkArmor))) return slot;
 		if (Config.enablePlayerLinkInv) return slot + 9;
 		if (!Config.enablePlayerLinkHotbar && Config.enablePlayerLinkArmor) return slot + 36;
@@ -511,7 +504,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
     }
 	
 	private boolean isItemValid(int slot, ItemStack stack) {
-		if (!isActive() && stack == null) return false;
+		if (!isActive() || stack == null) return false;
 		int adjSlot = getAdjustedSlot(slot);
 		if (Config.enablePlayerLinkArmor && adjSlot >= 36 && adjSlot <= 39) {
 			int armorTypeForSlot = 39 - adjSlot;
@@ -519,13 +512,10 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		}
 		if (adjSlot == 40) {
 			if (Config.enablePlayerLinkFood && getFoodValue(stack) > 0) {
-				if(20 - getPlayer().getFoodStats().getFoodLevel() >= getFoodValue(stack)) {
-	                return true;
-	            }
+				if(20 - getPlayer().getFoodStats().getFoodLevel() >= getFoodValue(stack)) return true;
 			}
-			if (Config.enablePlayerLinkPotions) {
-		        return stack.getItem() instanceof ItemPotion;
-			}
+			if (Config.enablePlayerLinkPotions) return stack.getItem() instanceof ItemPotion;
+			
 			return false;
 		}
 		

@@ -9,8 +9,7 @@ public class BotaniaHelper {
 		int toBeCharged = 0;
 		if (stack.getItem() instanceof IManaItem) {
 			IManaItem currentItem = (IManaItem)stack.getItem();
-			toBeCharged = currentItem.getMaxMana(stack) - currentItem.getMana(stack);
-			toBeCharged = Math.min(toBeCharged, currentMana);
+			toBeCharged = Math.min(currentItem.getMaxMana(stack) - currentItem.getMana(stack), currentMana);
 			if (toBeCharged > 0) {
 				currentItem.addMana(stack, toBeCharged);
 			}
