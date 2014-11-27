@@ -20,9 +20,11 @@ import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
+
 //Wormhole
 import com.mordenkainen.wormhole.config.Config;
 import com.mordenkainen.wormhole.blocks.BlockEnum;
+import com.mordenkainen.wormhole.mod.ModHelper;
 import com.mordenkainen.wormhole.proxy.CommonProxy;
 import com.mordenkainen.wormhole.worldgen.WormholeGen;
 
@@ -63,6 +65,7 @@ public class Wormhole {
 		GameRegistry.registerWorldGenerator(new WormholeGen(), 1);
 		MinecraftForge.EVENT_BUS.register(proxy);
 		FMLInterModComms.sendMessage("Waila", "register", "com.mordenkainen.wormhole.mod.WailaProvider.callbackRegister");
+		ModHelper.init();
 	}
 
 	@EventHandler

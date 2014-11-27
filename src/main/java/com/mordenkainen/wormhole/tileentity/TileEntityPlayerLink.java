@@ -25,7 +25,6 @@ import net.minecraft.util.StringUtils;
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Optional;
 
 // Google
@@ -39,23 +38,33 @@ import cofh.api.energy.EnergyStorage;
 import cofh.api.energy.IEnergyContainerItem;
 import cofh.api.energy.IEnergyHandler;
 
+// Botania
+import vazkii.botania.api.mana.IManaReceiver;
+
 // Wormhole
 import com.mordenkainen.wormhole.mod.IC2Helper;
+import com.mordenkainen.wormhole.mod.ModHelper;
 import com.mordenkainen.wormhole.config.Config;
+import com.mordenkainen.wormhole.mod.BotaniaHelper;
 
-@Optional.Interface(iface = "ic2.api.energy.tile.IEnergySink", modid = "IC2")
-public class TileEntityPlayerLink extends TileEntity implements ISidedInventory, IEnergyHandler, ICamo, IEnergySink  {
+@Optional.InterfaceList({
+	@Optional.Interface(iface = "ic2.api.energy.tile.IEnergySink", modid = "IC2"),
+	@Optional.Interface(iface = "vazkii.botania.api.mana.IManaReceiver", modid = "Botania")
+})
+public class TileEntityPlayerLink extends TileEntity implements ISidedInventory, IEnergyHandler, ICamo, IEnergySink, IManaReceiver  {
 	public Block blockCamoAs = null;
     public int blockCamoMetadata = 0;
     public EnergyStorage storage = new EnergyStorage(60000);
     public boolean silkTouched = false;
     public GameProfile owner = null;
     private boolean addedToEnet;
+    private int currentMana = 0;
     
 	private static final int[] armorSlots;
 	private static final int[] invSlots;
 	private static final int[] hotbarSlots;
 	private static final int numSlots;
+	private static final int MAXMANA = 100000;
 
 	static {
 		int maxSlot = 0;
@@ -112,7 +121,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	
 	@Override
 	public void updateEntity() {
-		if (Loader.isModLoaded("IC2")) {
+		if (ModHelper.IC2Loaded) {
 			if (!addedToEnet) onLoaded();
 		}
 		if (!worldObj.isRemote) {
@@ -130,7 +139,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 								moved += ((IEnergyContainerItem)stack.getItem()).receiveEnergy(stack, toSend - moved, false);
 								
 							} else {
-								if (Loader.isModLoaded("IC2")) {
+								if (ModHelper.IC2Loaded) {
 									moved += IC2Helper.chargeItem(stack, toSend - moved);
 								}
 							}
@@ -142,13 +151,22 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 					}
 				}
 			}
+			if (ModHelper.BotaniaLoaded) {
+				IInventory playerInv = getPlayer().inventory;
+				for (int i = 0; i < playerInv.getSizeInventory() && currentMana > 0; i++) {
+					ItemStack stack = playerInv.getStackInSlot(i);
+					if (stack != null) {
+						currentMana -= BotaniaHelper.chargeItem(stack, currentMana);
+					}
+				}
+			}
 		}
 	}
 	
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		if (Loader.isModLoaded("IC2") && addedToEnet) {
+		if (ModHelper.IC2Loaded && addedToEnet) {
 			IC2Helper.deregisterTile(this);
 			addedToEnet = false;
 		}
@@ -370,6 +388,33 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		return arg1 - (stored / 4);
 	}
 	
+	// IManaReceiver
+	@Optional.Method(modid = "Botania")
+	@Override
+	public int getCurrentMana() {
+		return currentMana;
+	}
+
+	@Optional.Method(modid = "Botania")
+	@Override
+	public boolean canRecieveManaFromBursts() {
+		return true;
+	}
+
+	@Optional.Method(modid = "Botania")
+	@Override
+	public boolean isFull() {
+		return currentMana >= MAXMANA;
+	}
+
+	@Optional.Method(modid = "Botania")
+	@Override
+	public void recieveMana(int mana) {
+		currentMana += mana;
+		System.out.println(currentMana);
+		
+	}
+	
 	// End of Overrides
 	public void writeData(NBTTagCompound tags) {
 		if (owner != null) {
@@ -385,6 +430,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		if (silkTouched == true) {
             tags.setBoolean("silktouched", silkTouched);
         }
+		tags.setInteger("currentMana", currentMana);
 		storage.writeToNBT(tags);
 	}
 
@@ -398,6 +444,9 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
         }
         if (tags.hasKey("silktouched")) {
         	silkTouched = tags.getBoolean("silktouched");
+        }
+        if (tags.hasKey("currentMana")) {
+            currentMana = tags.getInteger("currentMana");
         }
         storage.readFromNBT(tags);
 	}
