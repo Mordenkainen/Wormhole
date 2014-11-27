@@ -13,6 +13,7 @@ public class Config {
 	public static boolean enablePlayerLinkEnergy;
 	public static boolean enablePlayerLinkFood;
 	public static boolean enablePlayerLinkPotions;
+	public static boolean enablePlayerLinkMana;
 	
 	public static void load(File configFile) {
 		Configuration config = new Configuration(configFile);
@@ -34,8 +35,8 @@ public class Config {
 		playerLinkHotProperty.comment = "Set to true to allow the PlayerLink to interact with the players hotbar.";
 		enablePlayerLinkHotbar = playerLinkHotProperty.getBoolean(true);
 		
-		Property playerLinkEnergyProperty = config.get("PlayerLink", "CanChargeItems", true);
-		playerLinkEnergyProperty.comment = "Set to true to allow the PlayerLink to charge items in the players inventory.";
+		Property playerLinkEnergyProperty = config.get("PlayerLink", "CanChargeEnergyItems", true);
+		playerLinkEnergyProperty.comment = "Set to true to allow the PlayerLink to charge RF/EU items in the players inventory.";
 		enablePlayerLinkEnergy = playerLinkEnergyProperty.getBoolean(true);
 		
 		Property playerLinkFoodProperty = config.get("PlayerLink", "CanFeedPlayer", true);
@@ -45,6 +46,10 @@ public class Config {
 		Property playerLinkPotionProperty = config.get("PlayerLink", "CanUsePotions", true);
 		playerLinkPotionProperty.comment = "Set to true to allow the PlayerLink to apply potion effects to the player using potions sent to the bottom.";
 		enablePlayerLinkPotions = playerLinkPotionProperty.getBoolean(true);
+		
+		Property playerLinkManaProperty = config.get("PlayerLink", "CanChargeManaItems", true);
+		playerLinkManaProperty.comment = "Set to true to allow the PlayerLink to charge Botania mana items in the players inventory.";
+		enablePlayerLinkMana = playerLinkManaProperty.getBoolean(true);
 		
 		config.save();
 	}

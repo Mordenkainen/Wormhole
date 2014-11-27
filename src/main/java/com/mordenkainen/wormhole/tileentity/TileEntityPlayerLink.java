@@ -124,45 +124,36 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		if (ModHelper.IC2Loaded) {
 			if (!addedToEnet) onLoaded();
 		}
+		if (!isActive()) return;
 		if (!worldObj.isRemote) {
-			if (!isActive()) return;
-			if (Config.enablePlayerLinkEnergy) {
-				if (storage.getEnergyStored() > 0) {
-					int toSend = storage.extractEnergy(10000, true);
-					int moved = 0;
-					IInventory playerInv = getPlayer().inventory;
-					for (int i = 0; i < playerInv.getSizeInventory(); i++) {
-						ItemStack stack = playerInv.getStackInSlot(i);
-						if (stack != null) {
-							if (stack.getItem() instanceof IEnergyContainerItem && 
-									((IEnergyContainerItem)stack.getItem()).getEnergyStored(stack) < ((IEnergyContainerItem)stack.getItem()).getMaxEnergyStored(stack)) {
-								moved += ((IEnergyContainerItem)stack.getItem()).receiveEnergy(stack, toSend - moved, false);
-								
-							} else {
-								if (ModHelper.IC2Loaded) {
-									moved += IC2Helper.chargeItem(stack, toSend - moved);
-								}
+			int toSend = storage.extractEnergy(10000, true);
+			int moved = 0;
+			IInventory playerInv = getPlayer().inventory;
+			for (int i = 0; i < playerInv.getSizeInventory(); i++) {
+				ItemStack stack = playerInv.getStackInSlot(i);
+				if (stack != null) {
+					if (Config.enablePlayerLinkEnergy && moved < toSend) {
+						if (stack.getItem() instanceof IEnergyContainerItem && 
+								((IEnergyContainerItem)stack.getItem()).getEnergyStored(stack) < ((IEnergyContainerItem)stack.getItem()).getMaxEnergyStored(stack)) {
+							moved += ((IEnergyContainerItem)stack.getItem()).receiveEnergy(stack, toSend - moved, false);
+							
+						} else {
+							if (ModHelper.IC2Loaded) {
+								moved += IC2Helper.chargeItem(stack, toSend - moved);
 							}
 						}
-						if (moved >= toSend) break;
 					}
-					if (moved > 0) {
-						storage.extractEnergy(moved, false);
+					if (Config.enablePlayerLinkMana && ModHelper.BotaniaLoaded) {
+							currentMana -= BotaniaHelper.chargeItem(stack, currentMana);
 					}
 				}
 			}
-			if (ModHelper.BotaniaLoaded) {
-				IInventory playerInv = getPlayer().inventory;
-				for (int i = 0; i < playerInv.getSizeInventory() && currentMana > 0; i++) {
-					ItemStack stack = playerInv.getStackInSlot(i);
-					if (stack != null) {
-						currentMana -= BotaniaHelper.chargeItem(stack, currentMana);
-					}
-				}
+			if (moved > 0) {
+				storage.extractEnergy(moved, false);
 			}
 		}
 	}
-	
+				
 	@Override
 	public void invalidate() {
 		super.invalidate();
