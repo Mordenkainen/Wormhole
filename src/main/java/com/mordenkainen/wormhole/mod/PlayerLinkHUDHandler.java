@@ -25,10 +25,10 @@ public class PlayerLinkHUDHandler implements IWailaDataProvider {
         	strings.add("Linked to: " + tileEntity.owner.getName());
         	strings.add(tileEntity.playerOnline() ? SpecialChars.GREEN + "Online" : SpecialChars.RED + "Offline");
         	strings.add(!tileEntity.hasRedstone() ? SpecialChars.GREEN + "Enabled" : SpecialChars.RED + "Disabled");
-        	strings.add(SpecialChars.RESET + tileEntity.currentMana + " / " + TileEntityPlayerLink.MAX_MANA + " Mana");
         } else {
         	strings.add("Unlinked");
         }
+        strings.add(SpecialChars.RESET + tileEntity.currentMana + " / " + TileEntityPlayerLink.MAX_MANA + " Mana");
 		return strings;
 	}
 

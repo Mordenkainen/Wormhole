@@ -21,14 +21,19 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.StringUtils;
 
+import net.minecraft.world.IBlockAccess;
 // Forge
 import net.minecraftforge.common.util.ForgeDirection;
 import net.minecraftforge.event.ForgeEventFactory;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Optional;
 
+
+
 // Google
 import com.google.common.collect.Iterables;
+
+
 
 // IC2
 import ic2.api.energy.tile.IEnergySink;
@@ -41,56 +46,69 @@ import cofh.api.energy.IEnergyHandler;
 // Botania
 import vazkii.botania.api.mana.IManaReceiver;
 
+// PneumaticCraft
+import pneumaticCraft.api.tileentity.IAirHandler;
+import pneumaticCraft.api.tileentity.IPneumaticMachine;
+
+
+
 // Wormhole
 import com.mordenkainen.wormhole.mod.IC2Helper;
 import com.mordenkainen.wormhole.mod.ModHelper;
+import com.mordenkainen.wormhole.mod.PneumaticCraftHelper;
 import com.mordenkainen.wormhole.config.Config;
 import com.mordenkainen.wormhole.mod.BotaniaHelper;
 
 @Optional.InterfaceList({
 	@Optional.Interface(iface = "ic2.api.energy.tile.IEnergySink", modid = "IC2"),
-	@Optional.Interface(iface = "vazkii.botania.api.mana.IManaReceiver", modid = "Botania")
+	@Optional.Interface(iface = "vazkii.botania.api.mana.IManaReceiver", modid = "Botania"),
+	@Optional.Interface(iface = "pneumaticCraft.api.tileentity.IPneumaticMachine", modid = "PneumaticCraft")
 })
-public class TileEntityPlayerLink extends TileEntity implements ISidedInventory, IEnergyHandler, ICamo, IEnergySink, IManaReceiver  {
-	public Block blockCamoAs = null;
-    public int blockCamoMetadata = 0;
+public class TileEntityPlayerLink extends TileEntity implements ISidedInventory, IEnergyHandler, ICamo, IEnergySink, IManaReceiver, IPneumaticMachine {
+	public Block blockCamoAs;
+    public int blockCamoMetadata;
     public EnergyStorage storage = new EnergyStorage(60000);
-    public boolean silkTouched = false;
-    public GameProfile owner = null;
+    public boolean silkTouched;
+    public GameProfile owner;
     private boolean addedToEnet;
-    public int currentMana = 0;
+    public int currentMana;
+	public Object airHandler;
     
-	private static final int[] armorSlots;
-	private static final int[] invSlots;
-	private static final int[] hotbarSlots;
-	private static final int numSlots;
+	private static final int[] ARMORSLOTS;
+	private static final int[] INVSLOTS;
+	private static final int[] HOTBARSLOTS;
+	private static final int NUMSLOTS;
 	public static final int MAX_MANA = 100000;
 
 	static {
 		int maxSlot = 0;
 		int[] slots;
 		int i;
-		numSlots = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0) + (Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? 1 : 0);
+		NUMSLOTS = (Config.enablePlayerLinkHotbar ? 9 : 0) + (Config.enablePlayerLinkInv ? 27 : 0) + (Config.enablePlayerLinkArmor ? 4 : 0) + (Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? 1 : 0);
 		if (Config.enablePlayerLinkHotbar) {
-			hotbarSlots= new int[] {0,1,2,3,4,5,6,7,8};
+			HOTBARSLOTS= new int[] {0,1,2,3,4,5,6,7,8};
 			maxSlot = 9;
 		} else {
-			hotbarSlots= new int[] {};
+			HOTBARSLOTS= new int[] {};
 		}
 		if (Config.enablePlayerLinkInv) {
 			slots = new int[27];
-			for (i = 0; i < slots.length; i++) slots[i] = i + maxSlot;
+			for (i = 0; i < slots.length; i++) {
+				slots[i] = i + maxSlot;
+			}
 			maxSlot += i;
-			invSlots = slots.clone();
+			INVSLOTS = slots.clone();
 		} else {
-			invSlots = new int[] {};
+			INVSLOTS = new int[] {};
 		}
 		if (Config.enablePlayerLinkArmor) {
 			slots = Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? new int[5] : new int [4];
-			for (i = 0; i < slots.length; i++) slots[i] = i + maxSlot;
-			armorSlots = slots.clone();
+			for (i = 0; i < slots.length; i++) {
+				slots[i] = i + maxSlot;
+			}
+			ARMORSLOTS = slots.clone();
 		} else {
-			armorSlots = Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? new int[] {maxSlot} : new int [] {};
+			ARMORSLOTS = Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ? new int[] {maxSlot} : new int [] {};
 		}
 	}
 	
@@ -121,10 +139,15 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	
 	@Override
 	public void updateEntity() {
-		if (ModHelper.IC2Loaded) {
-			if (!addedToEnet) onLoaded();
+		if (ModHelper.IC2Loaded && !addedToEnet) {
+			onLoaded();
 		}
-		if (!isActive()) return;
+		if (ModHelper.PneumaticCraftLoaded) {
+			PneumaticCraftHelper.updateEntity(airHandler);
+		}
+		if (!isActive()) {
+			return;
+		}
 		if (!worldObj.isRemote) {
 			int toSend = storage.extractEnergy(10000, true);
 			int moved = 0;
@@ -143,12 +166,29 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 					if (Config.enablePlayerLinkMana && ModHelper.BotaniaLoaded) {
 						currentMana -= BotaniaHelper.chargeItem(stack, currentMana);
 					}
+					if (Config.enablePlayerLinkPressure && ModHelper.PneumaticCraftLoaded) {
+						PneumaticCraftHelper.chargeItem(stack, airHandler);
+					}
 				}
 			}
-			if (moved > 0) storage.extractEnergy(moved, false);
+			if (moved > 0) {
+				storage.extractEnergy(moved, false);
+			}
 		}
 	}
-				
+	
+	@Override
+	public void validate()
+    {
+        super.validate();
+        if (ModHelper.PneumaticCraftLoaded) {
+        	if (airHandler == null) {
+    			airHandler = PneumaticCraftHelper.getNewAirHandler();
+    		}
+			PneumaticCraftHelper.validate(airHandler, this);
+		}
+    }
+	
 	@Override
 	public void invalidate() {
 		super.invalidate();
@@ -166,7 +206,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	// IInventory
 	@Override
 	public int getSizeInventory() {
-		return isActive() ? numSlots : 0;
+		return isActive() ? NUMSLOTS : 0;
 	}
 
 	@Override
@@ -208,7 +248,9 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
                                 player.dropPlayerItemWithRandomChoice(remainingItem, false);
                             }
                         }
-                        if(stack.stackSize == startValue) break;
+                        if(stack.stackSize == startValue) {
+                        	break;
+                        }
                     }
                     if (stack.stackSize > 0) {
                     	if(!player.inventory.addItemStackToInventory(stack)) {
@@ -271,11 +313,11 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	public int[] getAccessibleSlotsFromSide(int side) {
 		switch (side) {
 			case 0:
-				return hotbarSlots;
+				return HOTBARSLOTS.clone();
 			case 1:
-				return armorSlots;
+				return ARMORSLOTS.clone();
 			default:
-				return invSlots;
+				return INVSLOTS.clone();
 		}
 	}
 
@@ -287,10 +329,8 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 
 	@Override
 	public int receiveEnergy(ForgeDirection from, int maxReceive, boolean simulate) {
-		if (Config.enablePlayerLinkEnergy) {
-			if (!worldObj.isRemote) {
-				return storage.receiveEnergy(maxReceive, simulate);
-			}
+		if (Config.enablePlayerLinkEnergy && !worldObj.isRemote) {
+			return storage.receiveEnergy(maxReceive, simulate);
 		}
 		return 0;
 	}
@@ -369,7 +409,9 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	@Optional.Method(modid = "IC2")
 	@Override
 	public double injectEnergy(ForgeDirection side, double arg1, double arg2) {
-		if (!Config.enablePlayerLinkEnergy) return arg1;
+		if (!Config.enablePlayerLinkEnergy) {
+			return arg1;
+		}
 		int stored = storage.receiveEnergy((int)arg1 * 4, false);
 		return arg1 - (stored / 4);
 	}
@@ -399,6 +441,17 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		currentMana += Math.min(mana, MAX_MANA - currentMana);
 	}
 	
+	// IPneumaticMachine
+	@Override
+	public IAirHandler getAirHandler() {
+		return (IAirHandler)airHandler;
+	}
+
+	@Override
+	public boolean isConnectedTo(ForgeDirection arg0) {
+		return true;
+	}	
+	
 	// End of Overrides
 	public void writeData(NBTTagCompound tags) {
 		if (owner != null) {
@@ -411,11 +464,14 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
             tags.setInteger("camoId", Block.getIdFromBlock(blockCamoAs));
             tags.setInteger("camoMeta", blockCamoMetadata);
         }
-		if (silkTouched == true) {
+		if (silkTouched) {
             tags.setBoolean("silktouched", silkTouched);
         }
 		tags.setInteger("currentMana", currentMana);
 		storage.writeToNBT(tags);
+		if (ModHelper.PneumaticCraftLoaded && airHandler != null) {
+			PneumaticCraftHelper.writeToNBT(airHandler, tags);
+		}
 	}
 
 	public void readData(NBTTagCompound tags) {
@@ -433,6 +489,12 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
             currentMana = tags.getInteger("currentMana");
         }
         storage.readFromNBT(tags);
+        if (ModHelper.PneumaticCraftLoaded) {
+        	if (airHandler == null) {
+        		airHandler = PneumaticCraftHelper.getNewAirHandler();
+        	}
+			PneumaticCraftHelper.readFromNBT(airHandler, tags);
+		}
 	}
 	
 	private boolean isActive() {
@@ -450,10 +512,8 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	private EntityPlayer getPlayer() {
 		if (owner != null) {
 			for (Object playerObj : MinecraftServer.getServer().getConfigurationManager().playerEntityList) {
-				if (playerObj instanceof EntityPlayer) {
-					if (((EntityPlayer)playerObj).getGameProfile().getId().equals(owner.getId())) {
-						return (EntityPlayer)playerObj;
-					}
+				if (playerObj instanceof EntityPlayer && ((EntityPlayer)playerObj).getGameProfile().getId().equals(owner.getId())) {
+					return (EntityPlayer)playerObj;
 				}
 			}
 		}
@@ -463,7 +523,9 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	public void setOwner(GameProfile profile) {
 		owner = profile;
 		loadProfile();
-		if (owner == null) silkTouched = false;
+		if (owner == null) {
+			silkTouched = false;
+		}
 	}
 	
 	private void loadProfile() {
@@ -492,7 +554,7 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 	}
 	
 	public int getAdjustedSlot(int slot) {
-		if ((Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ) && slot == armorSlots[armorSlots.length - 1]) return 40;
+		if ((Config.enablePlayerLinkFood || Config.enablePlayerLinkPotions ) && slot == ARMORSLOTS[ARMORSLOTS.length - 1]) return 40;
 		if (Config.enablePlayerLinkHotbar && (Config.enablePlayerLinkInv || (!Config.enablePlayerLinkInv && !Config.enablePlayerLinkArmor))) return slot;
 		if (Config.enablePlayerLinkInv) return slot + 9;
 		if (!Config.enablePlayerLinkHotbar && Config.enablePlayerLinkArmor) return slot + 36;
@@ -504,7 +566,9 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
     }
 	
 	private boolean isItemValid(int slot, ItemStack stack) {
-		if (!isActive() || stack == null) return false;
+		if (!isActive() || stack == null) {
+			return false;
+		}
 		int adjSlot = getAdjustedSlot(slot);
 		if (Config.enablePlayerLinkArmor && adjSlot >= 36 && adjSlot <= 39) {
 			int armorTypeForSlot = 39 - adjSlot;
@@ -512,13 +576,23 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 		}
 		if (adjSlot == 40) {
 			if (Config.enablePlayerLinkFood && getFoodValue(stack) > 0) {
-				if(20 - getPlayer().getFoodStats().getFoodLevel() >= getFoodValue(stack)) return true;
+				if(20 - getPlayer().getFoodStats().getFoodLevel() >= getFoodValue(stack)) {
+					return true;
+				}
 			}
-			if (Config.enablePlayerLinkPotions) return stack.getItem() instanceof ItemPotion;
+			if (Config.enablePlayerLinkPotions) {
+				return stack.getItem() instanceof ItemPotion;
+			}
 			
 			return false;
 		}
 		
 		return getPlayer().inventory.isItemValidForSlot(adjSlot, stack);
+	}
+
+	public void onNeighborChange(IBlockAccess world, int x, int y, int z, int tileX, int tileY, int tileZ) {
+		if (ModHelper.PneumaticCraftLoaded) {
+			PneumaticCraftHelper.onNeighborChange(airHandler);
+		}
 	}
 }

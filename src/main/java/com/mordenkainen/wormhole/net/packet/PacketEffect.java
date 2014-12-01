@@ -13,7 +13,6 @@ import cpw.mods.fml.common.network.simpleimpl.IMessageHandler;
 import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 
 // Wormhole
-
 import com.mordenkainen.wormhole.net.NetUtils;
 
 public class PacketEffect implements IMessage, IMessageHandler<PacketEffect, IMessage> {

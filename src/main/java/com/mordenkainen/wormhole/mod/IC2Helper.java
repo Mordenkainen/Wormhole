@@ -16,10 +16,9 @@ public class IC2Helper {
 	public static final int chargeItem(ItemStack stack, int maxCharge) {
 		double amountCharged = 0;
 		if (stack.getItem() instanceof IElectricItem) {
-			double maxEU = maxCharge / 4;
 			double curCharge = ElectricItem.manager.getCharge(stack);
 			if (curCharge < ((IElectricItem)stack.getItem()).getMaxCharge(stack)) {
-				amountCharged = ElectricItem.manager.charge(stack, maxEU, 4, false, false);
+				amountCharged = ElectricItem.manager.charge(stack, maxCharge / 4, 4, false, false);
 			}
 		}
 		return (int)amountCharged*4;

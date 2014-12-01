@@ -25,12 +25,11 @@ public abstract class BlockCamo extends BlockContainer {
 	@Override
     public IIcon getIcon(IBlockAccess world, int x, int y, int z, int side) {
         TileEntity tileEntity = world.getTileEntity(x, y, z);
-        if (tileEntity != null && tileEntity instanceof ICamo) {
+        if (tileEntity instanceof ICamo) {
         	ICamo tile = (ICamo) tileEntity;
             Block blockCamoAs = tile.getCamo();
-            int camoMeta = tile.getCamoMeta();
             if (blockCamoAs != null) {
-                return blockCamoAs.getIcon(side, camoMeta);
+                return blockCamoAs.getIcon(side, tile.getCamoMeta());
             }
         }
         return super.getIcon(world, x, y, z, side);
@@ -39,11 +38,12 @@ public abstract class BlockCamo extends BlockContainer {
 	@Override
     public int colorMultiplier(IBlockAccess world, int x, int y, int z) {
         TileEntity tileEntity = world.getTileEntity(x, y, z);
-        if (tileEntity != null && tileEntity instanceof ICamo) {
+        if (tileEntity instanceof ICamo) {
         	ICamo tile = (ICamo) tileEntity;
             Block blockCamoAs = tile.getCamo();
-            if (blockCamoAs != null)
+            if (blockCamoAs != null) {
                 return blockCamoAs.colorMultiplier(world, x, y, z);
+            }
         }
         return super.colorMultiplier(world, x, y, z);
     }

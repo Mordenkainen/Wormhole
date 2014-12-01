@@ -39,7 +39,7 @@ public class BlockQuantumOre extends Block {
 		setResistance(5.0F);
 		setHarvestLevel("pickaxe", 3);
 		setStepSound(soundTypePiston);
-		setCreativeTab(Wormhole.ModTab);
+		setCreativeTab(Wormhole.modTab);
 	}
 	
 	@Override

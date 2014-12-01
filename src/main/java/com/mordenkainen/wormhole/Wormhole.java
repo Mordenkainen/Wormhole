@@ -33,12 +33,12 @@ public class Wormhole {
 	public static final String MODID = "wormhole";
 	public static final String MODNAME = "Wormhole";
 	public static final String VERSION = "1.0";
-	public static final SimpleNetworkWrapper network = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
+	public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel(MODID);
 	
 	@Instance(Wormhole.MODID)
 	public static Wormhole instance;
 
-	public static CreativeTabs ModTab = new CreativeTabs(MODID) {
+	public static CreativeTabs modTab = new CreativeTabs(MODID) {
 		@Override
 		@SideOnly(Side.CLIENT)
 		public Item getTabIconItem() {
@@ -51,7 +51,7 @@ public class Wormhole {
 
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
-		instance = this;
+		//instance = this;
 		Config.load(event.getSuggestedConfigurationFile());
 	}
 

@@ -33,7 +33,7 @@ public class BlockPlayerLink extends BlockCamo {
 		setHarvestLevel("pickaxe", 2);
 		setStepSound(soundTypeMetal);
 		setBlockTextureName(Wormhole.MODID + ":playerlink");
-		setCreativeTab(Wormhole.ModTab);
+		setCreativeTab(Wormhole.modTab);
 	}
 	
 	// BlockContainer
@@ -43,6 +43,15 @@ public class BlockPlayerLink extends BlockCamo {
 	}
 
 	// Block
+	@Override
+	public void onNeighborChange(IBlockAccess world, int x, int y, int z, int tileX, int tileY, int tileZ)
+    {
+		TileEntityPlayerLink te = (TileEntityPlayerLink)world.getTileEntity(x, y, z);
+		if (te != null) {
+			te.onNeighborChange(world, x, y, z, tileX, tileY, tileZ);
+		}
+    }
+	
 	@Override
 	public boolean onBlockActivated(World world, int xPos, int yPos, int zPos, EntityPlayer player, int par6, float par7, float par8, float par9) {
 		TileEntityPlayerLink te = getTE(world, xPos, yPos, zPos);

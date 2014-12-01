@@ -26,7 +26,7 @@ public class ItemCamoTool extends Item {
 	public ItemCamoTool() {
 		super();
 		setUnlocalizedName(Wormhole.MODID + ".camotool");
-		setCreativeTab(Wormhole.ModTab);
+		setCreativeTab(Wormhole.modTab);
 		setTextureName(Wormhole.MODID + ":camotool");
 		setMaxStackSize(1);
 	}

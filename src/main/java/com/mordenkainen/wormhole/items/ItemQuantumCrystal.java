@@ -27,13 +27,13 @@ public class ItemQuantumCrystal extends Item {
 	@SideOnly(Side.CLIENT)
 	private IIcon stableIcon;
 	
-	private static final String[] names = {"unstable", "stable"};
+	private static final String[] NAMES = {"unstable", "stable"};
 	
 	public ItemQuantumCrystal() {
 		super();
 		setHasSubtypes(true);
 		setUnlocalizedName(Wormhole.MODID + ".quantumcrystal");
-		setCreativeTab(Wormhole.ModTab);
+		setCreativeTab(Wormhole.modTab);
 	}
 	
 	@Override
@@ -43,14 +43,14 @@ public class ItemQuantumCrystal extends Item {
 	
 	@Override
 	public String getUnlocalizedName(ItemStack itemstack) {
-		return super.getUnlocalizedName() + "." + names[itemstack.getItemDamage()];
+		return super.getUnlocalizedName() + "." + NAMES[itemstack.getItemDamage()];
 	}
 	
 	@SuppressWarnings({"unchecked","rawtypes"})
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void getSubItems(Item item, CreativeTabs creativeTabs, List items) {
-		for (int x = 0; x < names.length; x++) {
+		for (int x = 0; x < NAMES.length; x++) {
 			items.add(new ItemStack(this, 1, x));
 		}
 	}
@@ -58,11 +58,11 @@ public class ItemQuantumCrystal extends Item {
 	@SideOnly(Side.CLIENT)
 	@Override
 	public void registerIcons(IIconRegister iconRegister) {
-		stableIcon = iconRegister.registerIcon(Wormhole.MODID + ":quantumcrystal." + names[1]);
+		stableIcon = iconRegister.registerIcon(Wormhole.MODID + ":quantumcrystal." + NAMES[1]);
 		unstableIcons = new IIcon[16];
 		
 		for (int i = 0; i < unstableIcons.length; i++) {
-			unstableIcons[i] = iconRegister.registerIcon(Wormhole.MODID + ":quantumcrystal." + names[0] + "." + i);
+			unstableIcons[i] = iconRegister.registerIcon(Wormhole.MODID + ":quantumcrystal." + NAMES[0] + "." + i);
 		}
 	}
 	

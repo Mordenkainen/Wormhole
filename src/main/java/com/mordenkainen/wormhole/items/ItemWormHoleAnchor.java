@@ -33,7 +33,7 @@ public class ItemWormHoleAnchor extends Item {
 	public ItemWormHoleAnchor() {
 		super();
 		setUnlocalizedName(Wormhole.MODID + ".wormholeanchor");
-		setCreativeTab(Wormhole.ModTab);
+		setCreativeTab(Wormhole.modTab);
 		setTextureName(Wormhole.MODID + ":wormholeanchor");
 		setMaxStackSize(1);
 	}
@@ -94,8 +94,8 @@ public class ItemWormHoleAnchor extends Item {
 				player.worldObj.playSoundAtEntity(player, "dig.glass", 1.0f, 1.0f);
 			}
 			if (!player.worldObj.isRemote) {
-		      Wormhole.network.sendToAllAround(oldDim, oldPoint);
-		      Wormhole.network.sendToAllAround(newDim, newPoint);
+		      Wormhole.NETWORK.sendToAllAround(oldDim, oldPoint);
+		      Wormhole.NETWORK.sendToAllAround(newDim, newPoint);
 		    }
 		}
 		return stack;

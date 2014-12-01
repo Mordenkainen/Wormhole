@@ -68,7 +68,7 @@ public class CommonProxy {
 	
 	public void RegisterPackets() {
 		int disc = 0;
-		Wormhole.network.registerMessage(PacketEffect.class, PacketEffect.class, disc++, Side.CLIENT);
+		Wormhole.NETWORK.registerMessage(PacketEffect.class, PacketEffect.class, disc++, Side.CLIENT);
 	}
 	
 	@SubscribeEvent

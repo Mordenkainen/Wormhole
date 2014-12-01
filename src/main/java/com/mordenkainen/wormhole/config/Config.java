@@ -14,6 +14,7 @@ public class Config {
 	public static boolean enablePlayerLinkFood;
 	public static boolean enablePlayerLinkPotions;
 	public static boolean enablePlayerLinkMana;
+	public static boolean enablePlayerLinkPressure;
 	
 	public static void load(File configFile) {
 		Configuration config = new Configuration(configFile);
@@ -50,6 +51,10 @@ public class Config {
 		Property playerLinkManaProperty = config.get("PlayerLink", "CanChargeManaItems", true);
 		playerLinkManaProperty.comment = "Set to true to allow the PlayerLink to charge Botania mana items in the players inventory.";
 		enablePlayerLinkMana = playerLinkManaProperty.getBoolean(true);
+		
+		Property playerLinkPressureProperty = config.get("PlayerLink", "CanChargePressureItems", true);
+		playerLinkPressureProperty.comment = "Set to true to allow the PlayerLink to charge PneumaticCraft items in the players inventory.";
+		enablePlayerLinkPressure = playerLinkPressureProperty.getBoolean(true);
 		
 		config.save();
 	}

@@ -4,15 +4,15 @@ package com.mordenkainen.wormhole.tileentity;
 import net.minecraft.block.Block;
 
 public interface ICamo {
-    public boolean canCamo();
+    boolean canCamo();
 
-    public boolean canCamoAs(Block block, int metadata);
+    boolean canCamoAs(Block block, int metadata);
 
-    public Block getCamo();
+    Block getCamo();
 
-    public int getCamoMeta();
+    int getCamoMeta();
 
-    public void setCamo(Block block, int metadata);
+    void setCamo(Block block, int metadata);
 
-    public void clearCamo();
+    void clearCamo();
 }
