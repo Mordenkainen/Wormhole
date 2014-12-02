@@ -1,3 +1,4 @@
+// TODO Wormhole anchor particle position is wrong.
 package com.mordenkainen.wormhole;
 
 // Minecraft
@@ -19,7 +20,6 @@ import cpw.mods.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
-
 
 //Wormhole
 import com.mordenkainen.wormhole.config.Config;
@@ -48,20 +48,19 @@ public class Wormhole {
 
 	@SidedProxy(clientSide = "com.mordenkainen.wormhole.proxy.ClientProxy", serverSide = "com.mordenkainen.wormhole.proxy.CommonProxy")
 	public static CommonProxy proxy;
-
+	
 	@EventHandler
-	public void preInit(FMLPreInitializationEvent event) {
-		//instance = this;
+	public void preInit(final FMLPreInitializationEvent event) {
 		Config.load(event.getSuggestedConfigurationFile());
 	}
 
 	@EventHandler
-	public void init(FMLInitializationEvent event) {
-		proxy.RegisterBlocks();
-		proxy.RegisterItems();
-		proxy.RegisterRecipies();
-		proxy.RegisterRenderers();
-		proxy.RegisterTileEntities();
+	public void init(final FMLInitializationEvent event) {
+		proxy.registerBlocks();
+		proxy.registerItems();
+		proxy.registerRecipies();
+		proxy.registerRenderers();
+		proxy.registerTileEntities();
 		GameRegistry.registerWorldGenerator(new WormholeGen(), 1);
 		MinecraftForge.EVENT_BUS.register(proxy);
 		FMLInterModComms.sendMessage("Waila", "register", "com.mordenkainen.wormhole.mod.WailaProvider.callbackRegister");
@@ -69,7 +68,7 @@ public class Wormhole {
 	}
 
 	@EventHandler
-	public void postInit(FMLPostInitializationEvent event) {
-		proxy.RegisterPackets();
+	public void postInit(final FMLPostInitializationEvent event) {
+		proxy.registerPackets();
 	}
 }

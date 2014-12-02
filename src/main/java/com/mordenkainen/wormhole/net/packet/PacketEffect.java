@@ -16,11 +16,11 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import com.mordenkainen.wormhole.net.NetUtils;
 
 public class PacketEffect implements IMessage, IMessageHandler<PacketEffect, IMessage> {
-  boolean enter;
-  int x, y, z;
+  private boolean enter;
+  private int x, y, z;
 
   public PacketEffect() {}
-
+  
   public PacketEffect(boolean enter, int x, int y, int z) {
     this.enter = enter;
     this.x = x;

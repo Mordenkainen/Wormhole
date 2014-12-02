@@ -20,7 +20,6 @@ import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.StringUtils;
-
 import net.minecraft.world.IBlockAccess;
 // Forge
 import net.minecraftforge.common.util.ForgeDirection;
@@ -30,8 +29,10 @@ import cpw.mods.fml.common.Optional;
 
 
 
+
 // Google
 import com.google.common.collect.Iterables;
+
 
 
 
@@ -52,10 +53,12 @@ import pneumaticCraft.api.tileentity.IPneumaticMachine;
 
 
 
+
 // Wormhole
 import com.mordenkainen.wormhole.mod.IC2Helper;
 import com.mordenkainen.wormhole.mod.ModHelper;
 import com.mordenkainen.wormhole.mod.PneumaticCraftHelper;
+import com.mordenkainen.wormhole.mod.ThaumcraftHelper;
 import com.mordenkainen.wormhole.config.Config;
 import com.mordenkainen.wormhole.mod.BotaniaHelper;
 
@@ -168,6 +171,9 @@ public class TileEntityPlayerLink extends TileEntity implements ISidedInventory,
 					}
 					if (Config.enablePlayerLinkPressure && ModHelper.PneumaticCraftLoaded) {
 						PneumaticCraftHelper.chargeItem(stack, airHandler);
+					}
+					if (Config.enablePlayerLinkVis && ModHelper.ThaumcraftLoaded) {
+						ThaumcraftHelper.chargeWand(stack, this);
 					}
 				}
 			}

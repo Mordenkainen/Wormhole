@@ -29,15 +29,15 @@ import com.mordenkainen.wormhole.net.packet.PacketEffect;
 import com.mordenkainen.wormhole.tileentity.TileEntityPlayerLink;
 
 public class CommonProxy {
-	public void RegisterTileEntities() {
+	public void registerTileEntities() {
 		GameRegistry.registerTileEntity(TileEntityPlayerLink.class, "tileEntityplayerlink");
 	}
 
-	public void RegisterRenderers() {
+	public void registerRenderers() {
 		// Only Clientside
 	}
 
-	public void RegisterBlocks() {
+	public void registerBlocks() {
 		for (BlockEnum current : BlockEnum.values()) {
 			try {
 				current.setBlockInstance(current.getBlockClass().newInstance());
@@ -46,7 +46,7 @@ public class CommonProxy {
 		}
 	}
 	
-	public void RegisterItems()
+	public void registerItems()
 	{
 		for (ItemEnum current : ItemEnum.values()) {
 			try {
@@ -56,7 +56,7 @@ public class CommonProxy {
 		}
 	}
 
-	public void RegisterRecipies() {
+	public void registerRecipies() {
 		GameRegistry.addSmelting(Item.getItemFromBlock(BlockEnum.QUANTUMORE.getBlockInstance()), new ItemStack(ItemEnum.QUANTUMCRYSTAL.getItemInstance(),4,1), 5);
 		GameRegistry.addSmelting(new ItemStack(ItemEnum.QUANTUMCRYSTAL.getItemInstance(), 1, 0), new ItemStack(ItemEnum.QUANTUMCRYSTAL.getItemInstance(),1,1), 0);
 		GameRegistry.addSmelting(ItemEnum.WORMHOLEANCHOR.getItemInstance(), new ItemStack(ItemEnum.WORMHOLEANCHOR.getItemInstance(),1), 0);
@@ -66,7 +66,7 @@ public class CommonProxy {
 		}
 	}
 	
-	public void RegisterPackets() {
+	public void registerPackets() {
 		int disc = 0;
 		Wormhole.NETWORK.registerMessage(PacketEffect.class, PacketEffect.class, disc++, Side.CLIENT);
 	}

@@ -10,7 +10,7 @@ import com.mordenkainen.wormhole.tileentity.TileEntityPlayerLink;
 
 public class ClientProxy extends CommonProxy {	
 	@Override
-	public void RegisterRenderers() {
+	public void registerRenderers() {
 		try {
 			ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPlayerLink.class,new TileEntityRendererPlayerLink());
 		} catch (NullPointerException e) {}

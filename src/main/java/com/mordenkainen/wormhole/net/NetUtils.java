@@ -12,24 +12,26 @@ import cpw.mods.fml.common.network.simpleimpl.MessageContext;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
-public class NetUtils {
-  public static EntityPlayer getPlayerFromContext(MessageContext ctx) {
-    EntityPlayer player = null;
-    switch (FMLCommonHandler.instance().getEffectiveSide()) {
-      case CLIENT:
-        player = getClientPlayer();
-        break;
-      case SERVER:
-        INetHandler netHandler = ctx.netHandler;
-        player = ((NetHandlerPlayServer)netHandler).playerEntity;
-        break;
-      default:
-    }
-    return player;
-  }
-
-  @SideOnly(Side.CLIENT)
-  private static EntityPlayer getClientPlayer() {
-    return Minecraft.getMinecraft().thePlayer;
-  }
+public final class NetUtils {
+	private NetUtils() {}
+	
+	public static EntityPlayer getPlayerFromContext(final MessageContext ctx) {
+		EntityPlayer player = null;
+		switch (FMLCommonHandler.instance().getEffectiveSide()) {
+			case CLIENT:
+				player = getClientPlayer();
+				break;
+			case SERVER:
+				final INetHandler netHandler = ctx.netHandler;
+				player = ((NetHandlerPlayServer)netHandler).playerEntity;
+				break;
+			default:
+		}
+		return player;
+	}
+	
+	@SideOnly(Side.CLIENT)
+	private static EntityPlayer getClientPlayer() {
+		return Minecraft.getMinecraft().thePlayer;
+	}
 }

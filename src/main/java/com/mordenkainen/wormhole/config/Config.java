@@ -15,6 +15,7 @@ public class Config {
 	public static boolean enablePlayerLinkPotions;
 	public static boolean enablePlayerLinkMana;
 	public static boolean enablePlayerLinkPressure;
+	public static boolean enablePlayerLinkVis;
 	
 	public static void load(File configFile) {
 		Configuration config = new Configuration(configFile);
@@ -55,6 +56,10 @@ public class Config {
 		Property playerLinkPressureProperty = config.get("PlayerLink", "CanChargePressureItems", true);
 		playerLinkPressureProperty.comment = "Set to true to allow the PlayerLink to charge PneumaticCraft items in the players inventory.";
 		enablePlayerLinkPressure = playerLinkPressureProperty.getBoolean(true);
+		
+		Property playerLinkVisProperty = config.get("PlayerLink", "CanChargeVisItems", true);
+		playerLinkVisProperty.comment = "Set to true to allow the PlayerLink to charge Vis storage items in the players inventory.";
+		enablePlayerLinkVis = playerLinkVisProperty.getBoolean(true);
 		
 		config.save();
 	}
